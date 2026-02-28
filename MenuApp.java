@@ -13,12 +13,12 @@ public class MenuApp extends JFrame {
     private final JTextArea textArea = new JTextArea();
     private final JPanel mainPanel = new JPanel(new BorderLayout());
 
-    // Option #3: one random green hue per program execution
-    private Color greenColor = null;
-    private final JMenuItem randomGreenItem = new JMenuItem("3) Random Green Hue");
+    // Option #3: a random color each time the menu item is selected
+    // (no caching, generate a new color on every press)
+    // keep a reference to the menu item so we can update its text
+    private final JMenuItem randomColorItem = new JMenuItem("3) Random Color");
 
-    private static final DateTimeFormatter DT_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public MenuApp() {
         super("Menu Demo (Java Swing)");
@@ -61,7 +61,7 @@ public class MenuApp extends JFrame {
             }
         });
 
-        randomGreenItem.addActionListener(e -> applyRandomGreen());
+        randomColorItem.addActionListener(e -> applyRandomColor());
 
         JMenuItem exit = new JMenuItem(new AbstractAction("4) Exit") {
             @Override
@@ -74,7 +74,7 @@ public class MenuApp extends JFrame {
 
         menu.add(printDateTime);
         menu.add(saveToLog);
-        menu.add(randomGreenItem);
+        menu.add(randomColorItem);
         menu.addSeparator();
         menu.add(exit);
 
@@ -108,25 +108,20 @@ public class MenuApp extends JFrame {
         }
     }
 
-    // 3) Change frame background to a random green hue.
-    //    Requirement: show the initial random hue each time selected for a single run.
-    //    Implementation: generate ONCE per run, reuse thereafter, and update menu text to show the hex.
-    private void applyRandomGreen() {
-        if (greenColor == null) {
-            Random rand = new Random();
+    // 3) Change frame background to a completely random color each time the item
+    // is selected. We always generate a new color and update the menu text with
+    // its hexadecimal value.
+    private void applyRandomColor() {
+        Random rand = new Random();
+        int r = rand.nextInt(256);
+        int g = rand.nextInt(256);
+        int b = rand.nextInt(256);
 
-            // green-ish: keep R and B low, G higher
-            int r = rand.nextInt(81);           // 0..80
-            int g = 120 + rand.nextInt(136);    // 120..255
-            int b = rand.nextInt(81);           // 0..80
+        Color color = new Color(r, g, b);
+        String hex = String.format("#%02x%02x%02x", r, g, b);
+        randomColorItem.setText("3) Random Color (" + hex + ")");
 
-            greenColor = new Color(r, g, b);
-
-            String hex = String.format("#%02x%02x%02x", r, g, b);
-            randomGreenItem.setText("3) Random Green Hue (" + hex + ")");
-        }
-
-        mainPanel.setBackground(greenColor);
+        mainPanel.setBackground(color);
         mainPanel.repaint();
     }
 
@@ -134,7 +129,8 @@ public class MenuApp extends JFrame {
         // Use system look and feel (optional, but nice)
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         SwingUtilities.invokeLater(() -> {
             MenuApp app = new MenuApp();
